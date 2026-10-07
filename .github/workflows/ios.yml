@@ -13,19 +13,20 @@ jobs:
       - name: Setup Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '5.15.2'
+          version: '6.7.2'
           target: 'ios'
+          arch: 'config'
 
       - name: Build Xcode Project
         run: |
           mkdir build && cd build
-          qmake ../vesc_tool.pro -spec macx-ios-clang CONFIG+=iphoneos
-          make -j$(sysctl -n hw.ncpu)
+          qt-cmake .. -G Xcode -DCMAKE_SYSTEM_NAME=iOS
+          cmake --build . --config Release
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          mv build/release-iphoneos/vesc_tool.app Payload/
+          mv build/Release-iphoneos/vesc_tool.app Payload/ 2>/dev/null || mv build/vesc_tool.app Payload/
           zip -r vesc_tool.ipa Payload
 
       - name: Upload Artifact
