@@ -1,0 +1,35 @@
+name: Build VESC Tool iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          target: 'ios'
+
+      - name: Build Xcode Project
+        run: |
+          mkdir build && cd build
+          qmake ../vesc_tool.pro -spec macx-ios-clang CONFIG+=iphoneos
+          make -j$(sysctl -n hw.ncpu)
+
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          mv build/release-iphoneos/vesc_tool.app Payload/
+          zip -r vesc_tool.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vesc-tool-ios-ipa
+          path: vesc_tool.ipa
